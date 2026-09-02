@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alien-invasion"
+version = "1.0.0"
+description = "2D game Alien Invasion built with Pygame"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pygame>=2.6.0"
+]
+
+[project.scripts]
+alien-invasion = "alien_invasion:main"
+
+[tool.setuptools]
+py-modules = [
+    "alien_invasion",
+    "settings",
+    "ship",
+    "bullet",
+    "alien",
+    "game_stats",
+    "scoreboard"
+]
