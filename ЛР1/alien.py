@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pygame
 
 
@@ -11,16 +13,26 @@ class Alien(pygame.sprite.Sprite):
         self.settings = game.settings
         self.screen = game.screen
 
-        self.width = self.settings.alien_width
-        self.height = self.settings.alien_height
-
-        self.rect = pygame.Rect(
-            0,
-            0,
-            self.width,
-            self.height,
+        # Загружаем изображение пришельца.
+        image_path = (
+            Path(__file__).resolve().parent
+            / "assets"
+            / "alien.png"
         )
 
+        self.image = pygame.image.load(
+            image_path
+        ).convert_alpha()
+
+        # Масштабируем изображение.
+        self.image = pygame.transform.smoothscale(
+            self.image,
+            (50, 50),
+        )
+
+        self.rect = self.image.get_rect()
+
+        # Координата X хранится как float.
         self.x = float(self.rect.x)
 
     def update(self):
@@ -29,34 +41,12 @@ class Alien(pygame.sprite.Sprite):
             self.settings.alien_speed
             * self.settings.fleet_direction
         )
+
         self.rect.x = int(self.x)
 
     def draw(self):
         """Рисует пришельца."""
-        pygame.draw.ellipse(
-            self.screen,
-            self.settings.alien_color,
+        self.screen.blit(
+            self.image,
             self.rect,
-        )
-
-        eye_size = 6
-
-        pygame.draw.circle(
-            self.screen,
-            (20, 20, 20),
-            (
-                self.rect.centerx - 10,
-                self.rect.centery - 3,
-            ),
-            eye_size,
-        )
-
-        pygame.draw.circle(
-            self.screen,
-            (20, 20, 20),
-            (
-                self.rect.centerx + 10,
-                self.rect.centery - 3,
-            ),
-            eye_size,
         )

@@ -20,7 +20,7 @@ class Settings:
 
         # Настройки пришельцев
         self.alien_width = 50
-        self.alien_height = 35
+        self.alien_height = 50
         self.alien_color = (80, 220, 120)
         self.alien_speed = 1.0
         self.alien_drop_speed = 20

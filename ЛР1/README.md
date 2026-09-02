@@ -59,7 +59,7 @@ alien-invasion/
 Клонировать репозиторий:
 
 ```bash
-git clone <URL_РЕПОЗИТОРИЯ>
+git clone https://github.com/huksleva/Mathematical_Foundations_of_Computer_Graphics
 cd alien-invasion
 ```
 
