@@ -1,5 +1,7 @@
 # Лабораторная работа 2 — Глава 3
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/huksleva/Mathematical_Foundations_of_Computer_Graphics/blob/main/%D0%9B%D0%A02/LR2_%D0%93%D0%BB%D0%B0%D0%B2%D0%B0_3_%D0%92%D1%8B%D1%85%D0%BE%D0%B4_%D0%B2_%D1%82%D1%80%D0%B5%D1%85%D0%BC%D0%B5%D1%80%D0%BD%D1%8B%D0%B9_%D0%BC%D0%B8%D1%80.ipynb)
+
 ## Тема
 
 **«Выход в трехмерный мир»** по книге Пола Орланда
