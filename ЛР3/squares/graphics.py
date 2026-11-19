@@ -102,11 +102,15 @@ class Drawer:
         else:
             pygame.draw.lines(self.surface, self.color, closed, pixels, width)
 
-    def draw_point(self, x: float, y: float) -> None:
+    def draw_circle(self, x: float, y: float, radius: float) -> None:
+        pixels = max(1, get_length(self.rf.ux, radius))
+        pygame.draw.circle(self.surface, self.color, self.pixel(x, y), pixels, width=2)
+
+    def draw_point(self, x: float, y: float, radius: int = 5) -> None:
         px, py = self.pixel(x, y)
-        gfxdraw.filled_circle(self.surface, px, py, 7, (255, 255, 255))
-        gfxdraw.filled_circle(self.surface, px, py, 5, self.color)
-        gfxdraw.aacircle(self.surface, px, py, 5, self.color)
+        gfxdraw.filled_circle(self.surface, px, py, radius + 2, (255, 255, 255))
+        gfxdraw.filled_circle(self.surface, px, py, radius, self.color)
+        gfxdraw.aacircle(self.surface, px, py, radius, self.color)
 
     def draw_axes(self, x_min: float, x_max: float, y_min: float, y_max: float) -> None:
         self.draw_line(x_min, 0, x_max, 0)
@@ -124,8 +128,9 @@ class Drawer:
             self.color = grid
             self.draw_line(x, y_min, x, y_max)
             if x:
-                self.color = text
-                self.draw_text(x, y_min, f"{x:g}")
+                px, py = self.pixel(x, y_min)
+                label = self.font.render(f"{x:g}", True, text)
+                self.surface.blit(label, label.get_rect(midtop=(px, py + 2)))
         for y in ticks(y_min, y_max, 6):
             self.color = grid
             self.draw_line(x_min, y, x_max, y)

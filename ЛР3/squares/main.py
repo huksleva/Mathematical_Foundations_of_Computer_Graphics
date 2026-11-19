@@ -1,6 +1,5 @@
 """Интерактивное окно с одиннадцатью упражнениями."""
 
-import numpy as np
 import pygame
 
 from .exercises import (
@@ -8,6 +7,7 @@ from .exercises import (
     make_scene, parse_points, square_frames,
 )
 from .graphics import Drawer, Origin, ReferenceFrame, Unit, fit_frame
+from .transform import cartesian
 
 SIZE = (1120, 760)
 PLOT = pygame.Rect(294, 174, 798, 452)
@@ -36,6 +36,7 @@ class App:
         unit = Unit(1)
         self.drawer = Drawer(*SIZE, 32, ReferenceFrame(Origin(0, 0), unit, unit))
         self.drawer.initialize("Матричная графика · Практическая работа № 3")
+        pygame.key.stop_text_input()
         self.screen = self.drawer.surface
         self.fonts = {
             name: pygame.font.SysFont(("segoeui", "dejavusans", "arial"), size, bold=bold)
@@ -47,6 +48,7 @@ class App:
         self.points = {1: DEFAULT_POINT.copy(), 3: DEFAULT_SEGMENT.copy()}
         self.homogeneous = True
         self.frames = {mode: square_frames(mode) for mode in (True, False)}
+        self.centers = {mode: cartesian(frames[0]).mean(axis=0) for mode, frames in self.frames.items()}
         self.editing = False
         self.edit_text = ""
         self.edit_error = ""
@@ -61,7 +63,7 @@ class App:
             self.restart()
         else:
             self.scene = make_scene(task, self.points.get(task))
-            self.drawer.rf = fit_frame(PLOT, np.vstack([figure.points for figure in self.scene.figures]))
+            self.drawer.rf = fit_frame(PLOT, self.scene.bounds_points())
 
     def restart(self) -> None:
         self.progress = 0
@@ -195,14 +197,27 @@ class App:
 
     def draw_scene(self) -> None:
         drawer = self.drawer
+        circle = self.scene.circle
+        if circle is not None:
+            drawer.color = circle.color
+            drawer.draw_circle(*circle.center, circle.radius)
+            drawer.color = TEAL
+            drawer.draw_text(4, 2.75, "Примитивы Pygame")
         if self.task == 8:
             drawer.color = (136, 152, 174)
             drawer.draw_line(0, 0, 8, 8)
             drawer.draw_text(8, 8, "y = x")
-        for figure in self.scene.figures:
+        coincident = self.task == 1 and (
+            drawer.pixel(*self.scene.figures[0].points[0])
+            == drawer.pixel(*self.scene.figures[1].points[0])
+        )
+        for i, figure in enumerate(self.scene.figures):
             drawer.color = figure.color
             if len(figure.points) == 1:
-                drawer.draw_point(*figure.points[0])
+                drawer.draw_point(*figure.points[0], radius=10 if coincident and i == 0 else 5)
+            elif len(figure.points) == 2:
+                start, end = figure.points
+                drawer.draw_line(*start, *end, width=3)
             else:
                 drawer.draw_polygon(figure.points, 3, closed=figure.closed)
         if self.task == 1:
@@ -215,12 +230,10 @@ class App:
             labels = ()
         if labels:
             points = [figure for figure in self.scene.figures if len(figure.points) == 1]
-            for i, (label, figure) in enumerate(zip(labels, points)):
+            offsets = ((-51, 6), (10, -27)) if self.task == 6 else ((9, -27), (9, 11))
+            for label, figure, (dx, dy) in zip(labels, points, offsets):
                 x, y = drawer.pixel(*figure.points[0])
-                self.text(label, (x + 9, y - 27 + 38 * i), "medium", figure.color)
-        if self.task == 2:
-            drawer.color = TEAL
-            drawer.draw_text(3.65, -0.45, "Примитивы Pygame")
+                self.text(label, (x + dx, y + dy), "medium", figure.color)
 
     def draw_squares(self) -> None:
         drawer = self.drawer
@@ -228,9 +241,8 @@ class App:
         for i, frame in enumerate(frames[:self.progress + 1]):
             drawer.color = INK if i == 0 else SQUARE_LINE
             drawer.draw_polygon(frame, 2 if i == 0 else 1)
-        center = (5, 3.5) if self.homogeneous else (0, 0)
         drawer.color = ACCENT
-        drawer.draw_point(*center)
+        drawer.draw_point(*self.centers[self.homogeneous])
 
     def draw_details(self) -> None:
         self.card(DETAILS, PANEL)

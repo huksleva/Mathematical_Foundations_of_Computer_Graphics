@@ -30,7 +30,10 @@ def cartesian(points: Matrix) -> Matrix:
     """Нормализует [x, y, w] при w ≠ 0 и пропускает обычные пары [x, y]."""
     if points.shape[1] == 2:
         return points
-    return points[:, :2] / points[:, 2:3]
+    weights = points[:, 2:3]
+    if np.any(weights == 0):
+        raise ValueError("Точка с w = 0 не имеет конечных декартовых координат.")
+    return points[:, :2] / weights
 
 
 def successive(points: Matrix, matrix: Matrix, count: int) -> list[Matrix]:

@@ -1,5 +1,6 @@
 """Данные упражнений и расчёт фигур для окна визуализации."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from math import pi
 
@@ -52,14 +53,38 @@ class Figure:
 
 
 @dataclass(frozen=True)
+class Circle:
+    center: tuple[float, float]
+    radius: float
+    color: Color
+
+    def bounds(self) -> Matrix:
+        x, y = self.center
+        r = self.radius
+        return np.array([[x - r, y - r], [x + r, y + r]])
+
+
+@dataclass(frozen=True)
 class Scene:
     figures: list[Figure]
     description: tuple[str, str]
     legend: tuple[tuple[Color, str], ...]
+    circle: Circle | None = None
+
+    def bounds_points(self) -> Matrix:
+        points = [figure.points for figure in self.figures]
+        if self.circle is not None:
+            points.append(self.circle.bounds())
+        return np.vstack(points)
 
 
-def point_label(point: Matrix) -> str:
+def point_label(point: Iterable[float]) -> str:
     return "(" + "; ".join(f"{value:.6g}" for value in point) + ")"
+
+
+def matrix_label(matrix: Matrix) -> str:
+    rows = [", ".join(f"{value:g}".replace("-", "−") for value in row) for row in matrix]
+    return "T = [" + ", ".join(f"[{row}]" for row in rows) + "]"
 
 
 def parse_points(text: str, rows: int) -> Matrix:
@@ -116,18 +141,19 @@ def make_scene(task: int, user_points: Matrix | None = None) -> Scene:
     if task == 1:
         points = DEFAULT_POINT if user_points is None else user_points
         return paired(points, T_13, 1, (
-            "T = [[1, 3], [4, 1]]",
+            matrix_label(T_13),
             f"A {point_label(points[0])}  →  A′ {point_label((points @ T_13)[0])}",
         ))
     if task == 2:
-        angle = np.linspace(0, 2 * pi, 181)
-        circle = np.column_stack((2 + np.cos(angle), 2 + np.sin(angle)))
+        circle = Circle((2.0, 2.0), 1.0, BLUE)
         figures = [
-            Figure(circle, BLUE, closed=True),
             Figure(np.array([[4, 1], [7, 3]], dtype=float), ORANGE),
             Figure(np.array([[4, 1], [7, 0.5]], dtype=float), TEAL),
         ]
-        return Scene(figures, ("Окружность, два отрезка и текст", "Центр окружности (2; 2), радиус 1."), ())
+        return Scene(figures, (
+            "Окружность, два отрезка и текст",
+            f"Центр окружности {point_label(circle.center)}, радиус {circle.radius:g}.",
+        ), (), circle)
     if task == 3:
         points = DEFAULT_SEGMENT if user_points is None else user_points
         a, b = points
@@ -139,9 +165,9 @@ def make_scene(task: int, user_points: Matrix | None = None) -> Scene:
     if task == 4:
         points = np.array([[0, 100], [200, 300]], dtype=float)
         mid = points.mean(axis=0, keepdims=True)
-        mid_transformed = mid @ T_45
+        mid_transformed = (points @ T_45).mean(axis=0, keepdims=True)
         scene = paired(points, T_45, 2, (
-            "T = [[1, 2], [3, 1]]",
+            matrix_label(T_45),
             f"M {point_label(mid[0])}  →  M′ {point_label(mid_transformed[0])}",
         ))
         figures = scene.figures + [
@@ -163,7 +189,7 @@ def make_scene(task: int, user_points: Matrix | None = None) -> Scene:
         cross = intersection(points)
         cross_transformed = intersection(points @ T_6)
         scene = paired(points, T_6, 2, (
-            "T = [[1, 2], [1, −3]], масштаб исходных координат ×100",
+            f"{matrix_label(T_6)}, масштаб исходных координат ×100",
             f"P {point_label(cross)}  →  P′ {point_label(cross_transformed)}",
         ))
         figures = scene.figures + [
@@ -173,17 +199,17 @@ def make_scene(task: int, user_points: Matrix | None = None) -> Scene:
         return Scene(figures, scene.description, scene.legend)
     if task == 7:
         return paired(100 * L_7, T_7, 3, (
-            "T = [[0, 1], [−1, 0]], поворот на 90° против часовой стрелки",
-            "Обе фигуры показаны в одном масштабе ×100.",
+            f"{matrix_label(T_7)}, поворот на 90° против часовой стрелки",
+            "Координаты умножены на 100. Экранный сдвиг одинаков для обеих фигур.",
         ))
     if task == 8:
         return paired(L_8, T_8, 3, (
-            "T = [[0, 1], [1, 0]], отражение относительно y = x",
+            f"{matrix_label(T_8)}, отражение относительно y = x",
             "Координаты x и y меняются местами.",
         ))
     if task == 9:
         return paired(np.array([[5, 1], [5, 2], [3, 2]], dtype=float), T_9, 3, (
-            "T = [[2, 0], [0, 2]]",
+            matrix_label(T_9),
             "Расстояния от начала координат увеличиваются в 2 раза.",
         ))
     if task == 10:
